@@ -8,7 +8,6 @@ class Tree{
 private:
 	int window_width;
 	int maxDepth;
-	long NodeNum;
 	int minLeafSample;
 	float minInfoGain;
 
@@ -17,7 +16,7 @@ private:
 
 	vector<Mat> sample;
 	vector<int> label;
-	Node **node;
+	Node *root;
 
 public:
 	Tree(vector<Mat> &SP, vector<int> &LB, int w_w = 1, int maxD=10, int minL=1, float minInfo=0);

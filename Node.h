@@ -1,6 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
+
 #include<stdio.h>
 #include<vector>
 #include<list>
@@ -16,6 +17,7 @@ using namespace cv;
 
 class Node{
 private:
+	//split parameter of node
 	int x1;
 	int x2;
 	int y1;
@@ -23,37 +25,40 @@ private:
 	int d;
 	float theta;
 	int voting;
+
+	//parameter of model
+	int maxDepth;
+	int minLeafSample;
+	int minInfoGain;
+
+	//status of node
+	bool LeafFlag;
 	int sample_num;
-	//int threshold;
-	bool LeafNode;
+	int positive_num;
+	int current_depth;
 	float infoGain;
 	float Entro;
-	vector<Mat> imgList;
-	vector<Mat> leftImg;
-	vector<Mat> rightImg;
-	vector<int> imgLabel;
-	vector<int> leftLabel;
-	vector<int> rightLabel;
 
+	//data
+	vector<Mat> imgList;
+	vector<int> imgLabel;
+	Node *leftchild;
+	Node *rightchild;
+	
 public:
-	Node(vector<Mat> &sample, vector<int> &label, int w_w = 1);
+	Node(vector<Mat> &sample, vector<int> &label, int curr_depth, int w_w, int maxD, int minL, float minInfo);
 	~Node();
-	inline vector<Mat> get_Left(){return leftImg;};
-	inline vector<Mat> get_Right(){return rightImg;};
-	inline vector<int> get_Left_Label(){return leftLabel;};
-	inline vector<int> get_Right_Label(){return rightLabel;};
-	inline void setLeaf(){LeafNode = true;};
-	inline bool isLeaf(){return LeafNode;};
-	void select_Para();
-	//void calculate_infoGain();
-	float calculate_entropy(vector<int> label);
+
+	void setLeaf();
+	inline bool isLeaf(){return LeafFlag;};
+
+	float calculate_entropy(int sample_num, int positive_num);
 	inline float get_infoGain(){return infoGain;};
+
+	void train();
 	void split_Node();
-	void release_Vector();
-	int predict(Mat test_img);
-	void judge(int num_1 = 550, int num_0 = 2616);
-	int get_vote();
-	inline int getLength(){return imgList.size();};
-	//void split_new(vector<Mat> leftImg, vector<Mat>rightImg, vector<int>leftLabel, vector<int>rightLable);
+
+	int predict(Mat &test_img);
+	//vector<int> predict(vector<Mat> &test_img);
 };
 #endif//NODE_H

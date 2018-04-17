@@ -14,7 +14,7 @@ RandomForest::RandomForest(vector<Mat> &img, vector<int> &label, int w_w, int t_
 	maxDepth = maxD;
 	minLeafSample = minL;
 	minInfoGain = minInfo;
-	tree = new Tree*[tree_num];
+	root_list = new Node*[tree_num];
 
 	if(s_n > imgData.size()){
 		cout << "Sample size out of range, " << imgData.size() << " sample will be used" << endl;
@@ -26,14 +26,14 @@ RandomForest::RandomForest(vector<Mat> &img, vector<int> &label, int w_w, int t_
 
 RandomForest::~RandomForest(){
 	for(int i=0; i<tree_num; i++){
-		if(tree[i] != NULL){
-			delete tree[i];
-			tree[i] = NULL;
+		if(root_list[i] != NULL){
+			delete root_list[i];
+			root_list[i] = NULL;
 		}
 	}
 
-	delete[] tree;
-	tree = NULL;
+	delete[] root_list;
+	root_list = NULL;
 
 	imgData.clear();
 	LabelData.clear();
@@ -57,40 +57,31 @@ void RandomForest::train(){
 			}
 		}
 
-		tree[i] = new Tree(img, lab, window_width, maxDepth, minLeafSample, minInfoGain);
+		root_list[i] = new Node(img, lab, 0, window_width, maxDepth, minLeafSample, minInfoGain);
 		img.clear();
 		lab.clear();
 		vector<Mat>().swap(img);
 		vector<int>().swap(lab);
-		tree[i]->train();
+		root_list[i]->train();
 	}
-}
-
-
-vector<int> RandomForest::predict(vector<Mat> test_img){
-	//cout << "Start to predict" << endl;
-	//cout << "test size = " << test_img.size() << endl;
-	vector<int> predict_result;
-	for(int i=0; i<test_img.size(); i++){
-		int vote = 0;
-		for(int j=0; j<tree_num; j++)
-			vote += tree[j]->predict(test_img[i]);
-
-		if(vote>0.5*tree_num)
-			predict_result.push_back(1);
-		else
-			predict_result.push_back(0);
-	}
-
-	//cout << "predict size = " << predict_result.size() << endl;
-
-	return predict_result;
 }
 
 float RandomForest::predict(Mat test_img){
 	int vote = 0;
 	for(int j=0; j<tree_num; j++)
-		vote += tree[j]->predict(test_img);
+		vote += root_list[j]->predict(test_img);
 	
 	return 1.0*vote/tree_num;
+}
+
+vector<float> RandomForest::predict(vector<Mat> &test_img){
+	//cout << "Start to predict" << endl;
+	//cout << "test size = " << test_img.size() << endl;
+	vector<float> predict_result;
+	for(int i=0; i<test_img.size(); i++){
+		predict_result.push_back(predict(test_img[i]));
+	}
+	//cout << "predict size = " << predict_result.size() << endl;
+
+	return predict_result;
 }

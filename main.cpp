@@ -1,7 +1,6 @@
 ﻿#include "ExtractData.h"
 #include "ReadData.h"
 #include "Node.h"
-#include "Tree.h"
 #include "Data.h"
 #include "RandomForest.h"
 #include "Evaluate.h"
@@ -18,7 +17,7 @@ int main(){
 	float train_thresh = 0.35;
 	float test_thresh = 0.35;
 
-	bool get_train = true;
+	bool get_train = false;
 	bool get_test = false;
 
 
@@ -26,30 +25,21 @@ int main(){
 	extractData(train_fold, test_fold, out_fold, out_csv, train_thresh, test_thresh, get_train, get_test);
 	cout << "*****************Extraction completed*****************" << endl << endl;
 
+	cout << "*****************Start to read training data*****************" << endl;
 	vector<Mat> imgTrain;
 	vector<int> labelTrain;
-	//vector<Mat> imgTest;
-	//vector<int> labelTest;
-	//vector<Mat> imgList_tmp;
-	//vector<int> labelList_tmp;
 
-	//readData(imgList, labelList);
-	cout << "*****************Start to read training data*****************" << endl;
 	readTrainData(out_fold, imgTrain, labelTrain);
 
 	cout << "Sample number = " << imgTrain.size() << endl;
 	cout << "*****************Reading completed*****************" << endl << endl;
-
-	Node *nn = new Node(imgTrain, labelTrain, 1);
-	cout << "size = " << sizeof(nn) << endl;
-	cin.get();
 
 	double start,end,cost;
 
 	for(float i=1; i<=1; i++){
 		int window_width = i;
 
-		int tree_num = 30;
+		int tree_num = 5;
 		int sample_num = 10000;
 		int maxDepth = 20;
 		int minLeafSample = 1;

@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include "Tree.h"
+#include "Node.h"
 
 class RandomForest{
 private:
@@ -17,14 +17,16 @@ private:
 	vector<Mat> imgData;
 	vector<int> LabelData;
 
-	Tree **tree;
+	Node **root_list;
 
 public:
-	RandomForest(vector<Mat> &img, vector<int> &label, int w_w = 1, int t_n = 1, int s_n = 3000, int maxD=10, int minL=1, float minInfo=0);
+	RandomForest(vector<Mat> &img, vector<int> &label, int w_w, int t_n, int s_n, int maxD, int minL, float minInfo);
 	~RandomForest();
+
 	void train();
-	vector<int> predict(vector<Mat> test_img);
+	
 	float predict(Mat test_img);
+	vector<float> predict(vector<Mat> &test_img);
 };
 
 #endif//RANDOMFOREST_H

@@ -53,11 +53,11 @@ void get_predict_result(RandomForest *RF, string test_fold){
 									}
 								}
 							}
-							vector<int> result = RF->predict(imgTest);
+							vector<float> result = RF->predict(imgTest);
 							string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
 							ofstream fout(csv_name);
 							for(int i=0; i<result.size(); i++){
-								if(result[i] == 1)
+								if(result[i] >= 0.5)
 									fout << Y[i] << "," << X[i] << endl;
 							}
 							fout.close();
