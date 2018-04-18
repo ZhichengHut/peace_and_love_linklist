@@ -77,10 +77,23 @@ void Node::train(){
 }
 
 void Node::split_Node(){
-	if(Entro==0 || current_depth>maxDepth || sample_num<minLeafSample){
+	/*if(Entro==0 || current_depth>maxDepth || sample_num<minLeafSample){
+		setLeaf();
+		return;
+	}*/
+
+	if(Entro==0 || sample_num<minLeafSample){
 		setLeaf();
 		return;
 	}
+
+	if(current_depth>maxDepth){
+		cout << "insufficient depth" << endl;
+		setLeaf();
+		return;
+	}
+
+
 
 	srand (time(NULL));
 

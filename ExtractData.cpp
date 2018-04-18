@@ -1,10 +1,6 @@
 #include "ExtractData.h"
 
-
 int index = 0;
-int R = 3;
-int width = 35;
-int ran_point = 100;
 
 int total_c = 0;
 int total_miss = 0;
@@ -159,14 +155,14 @@ void clearFold(string out_fold){
 }
 
 
-void saveTrainData(string img_file, string csv_file, string out_fold, string out_csv, float thresh){
+void saveTrainData(string img_file, string csv_file, string out_fold, string out_csv, float thresh, int width, int R, int rand_num){
 	Mat img = imread(img_file,1);
 	Mat blue_ratio = preProcess(img, thresh);
 
 	//int R = 10;
 	vector<Point2i> center = getCenter(blue_ratio, R);
 	int cell_num = center.size();
-	for(int i=0; i<ran_point; i++){
+	for(int i=0; i<rand_num; i++){
 		int x = rand() % (img.cols-width);
 		int y = rand() % (img.rows-width);
 		//cout << x << " " << y << endl; 
@@ -299,14 +295,14 @@ void saveTrainData(string img_file, string csv_file, string out_fold, string out
 	fin.close();
 }
 
-void saveTrainData(string img_file, string out_fold, string out_csv, float thresh){
+void saveTrainData(string img_file, string out_fold, string out_csv, float thresh, int width, int R, int rand_num){
 	Mat img = imread(img_file,1);
 	Mat blue_ratio = preProcess(img, thresh);
 
 	//int R = 10;
 	vector<Point2i> center = getCenter(blue_ratio, R);
 	int cell_num = center.size();
-	for(int i=0; i<ran_point; i++){
+	for(int i=0; i<rand_num; i++){
 		int x = rand() % (img.cols-width);
 		int y = rand() % (img.rows-width);
 		//cout << x << " " << y << endl; 
@@ -340,7 +336,7 @@ void saveTrainData(string img_file, string out_fold, string out_csv, float thres
 	fin.close();
 }
 
-void getTrainingSet(string train_fold, string out_fold, string out_csv, float thresh){
+void getTrainingSet(string train_fold, string out_fold, string out_csv, float thresh, int width, int R, int rand_num){
 	vector<string> tif_set, csv_set;
 	clearFold(out_fold);
 
@@ -383,16 +379,16 @@ void getTrainingSet(string train_fold, string out_fold, string out_csv, float th
 		if(j<csv_set.size() && tif_set[i].substr(train_fold.length(),5) == csv_set[j].substr(train_fold.length(),5)){
 			cout << tif_set[i] << endl;
 			//cout << csv_set[j] << endl;
-			saveTrainData(tif_set[i], csv_set[j++], out_fold, out_csv, thresh);
+			saveTrainData(tif_set[i], csv_set[j++], out_fold, out_csv, thresh, width, R, rand_num);
 		}
 		else{
 			cout << tif_set[i] << endl;
-			saveTrainData(tif_set[i], out_fold, out_csv, thresh);
+			saveTrainData(tif_set[i], out_fold, out_csv, thresh, width, R, rand_num);
 		}
 	}
 }
 
-void getTestImg(string curDir, string img_name, float thresh){
+void getTestImg(string curDir, string img_name, float thresh, int width, int R){
 	string out_fold = curDir + "/" + img_name.substr(0,2) + "/";
 	string img_file = curDir + "/" + img_name;
 	string out_csv = out_fold + img_name.substr(0,2) + "_new.csv";
@@ -431,7 +427,7 @@ void getTestImg(string curDir, string img_name, float thresh){
 	fin.close();
 }
 
-void getTestingSet(string test_fold, float thresh){
+void getTestingSet(string test_fold, float thresh, int width, int R){
 	vector<string> tif_set, csv_set;
 
 	char delim = '/';
@@ -457,7 +453,7 @@ void getTestingSet(string test_fold, float thresh){
 					stat((curDir + string("/") + string(entry->d_name)).c_str(),&s);
 					if (((s.st_mode & S_IFMT ) != S_IFDIR ) && ((s.st_mode & S_IFMT) == S_IFREG )){
 						if(string(entry->d_name).substr(string(entry->d_name).find_last_of('.') + 1) == "tif")
-							getTestImg(curDir, entry->d_name, thresh);
+							getTestImg(curDir, entry->d_name, thresh, width, R);
 					}
 				}
 			}
@@ -465,16 +461,16 @@ void getTestingSet(string test_fold, float thresh){
 	}
 }
 
-void extractData(string train_fold, string test_fold, string out_fold, string out_csv, float train_thresh, float test_thresh, bool get_train, bool get_test){
+void extractData(string train_fold, string test_fold, string out_fold, string out_csv, float train_thresh, float test_thresh, bool get_train, bool get_test, int width, int R, int rand_num){
 	if(get_train){
-		getTrainingSet(train_fold, out_fold, out_csv, train_thresh);
+		getTrainingSet(train_fold, out_fold, out_csv, train_thresh, width, R, rand_num);
 		cout << "Extracted training set completed" << endl;
 		cout << "total cell: " << total_c << ", total miss: " << total_miss << ", total mitosis: " << total_mitosis << endl;
 		//cin.get();
 	}
 
 	if(get_test){
-		getTestingSet(test_fold, test_thresh);
+		getTestingSet(test_fold, test_thresh, width, R);
 		cout << "Extracted testing set completed" << endl;
 	}
 };

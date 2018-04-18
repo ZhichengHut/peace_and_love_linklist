@@ -14,15 +14,18 @@ int main(){
 	string out_fold = "C:/45 Thesis/data/train/extracted/";
 	string out_csv = "C:/45 Thesis/data/train/out_csv.csv";
 
+	cout << "*****************Start to extract sub-image*****************" << endl;
 	float train_thresh = 0.35;
 	float test_thresh = 0.35;
 
-	bool get_train = false;
+	bool get_train = true;
 	bool get_test = false;
 
+	int patch_width = 35;
+	int core_R = 3;
+	int ran_point = 0;
 
-	cout << "*****************Start to extract sub-image*****************" << endl;
-	extractData(train_fold, test_fold, out_fold, out_csv, train_thresh, test_thresh, get_train, get_test);
+	extractData(train_fold, test_fold, out_fold, out_csv, train_thresh, test_thresh, get_train, get_test, patch_width, core_R, ran_point);
 	cout << "*****************Extraction completed*****************" << endl << endl;
 
 	cout << "*****************Start to read training data*****************" << endl;
@@ -39,9 +42,9 @@ int main(){
 	for(float i=1; i<=1; i++){
 		int window_width = i;
 
-		int tree_num = 5;
+		int tree_num = 30;
 		int sample_num = 10000;
-		int maxDepth = 20;
+		int maxDepth = 50;
 		int minLeafSample = 1;
 		float minInfo = 0;
 

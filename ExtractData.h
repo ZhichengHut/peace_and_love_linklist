@@ -25,12 +25,12 @@ vector<int> readCSV(string csvFile);
 Mat preProcess(Mat img, float thresh);
 vector<Point2i> getCenter(Mat img, int R);
 void clearFold(string out_fold);
-void saveTrainData(string img_file, string csv_file, string out_fold, string out_csv, float thresh);
-void saveTrainData(string img_file, string out_fold, string out_csv, float thresh);
-void getTrainingSet(string train_fold, string out_fold, string out_csv, float thresh);
-void getTestImg(string curDir, string img_name, float thresh);
-void getTestingSet(string test_fold, float thresh);
-void extractData(string train_fold, string test_fold, string out_fold, string out_csv, float train_thresh, float test_thresh, bool get_train, bool get_test);
+void saveTrainData(string img_file, string csv_file, string out_fold, string out_csv, float thresh, int width, int R, int rand_num);
+void saveTrainData(string img_file, string out_fold, string out_csv, float thresh, int width, int R, int rand_num);
+void getTrainingSet(string train_fold, string out_fold, string out_csv, float thresh, int width, int R, int rand_num);
+void getTestImg(string curDir, string img_name, float thresh, int width, int R, int rand_num);
+void getTestingSet(string test_fold, float thresh, int width, int R, int rand_num);
+void extractData(string train_fold, string test_fold, string out_fold, string out_csv, float train_thresh, float test_thresh, bool get_train, bool get_test, int width, int R, int rand_num);
 
 
 #endif//EXTRACTDATA_H
