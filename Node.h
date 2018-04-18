@@ -61,4 +61,8 @@ public:
 	int predict(Mat &test_img);
 	//vector<int> predict(vector<Mat> &test_img);
 };
+
+inline int get_Sum(Mat &img, int x, int y, int d){
+	return img.at<int>(x+d-1, y+d-1) + img.at<int>(x,y) - img.at<int>(x,y+d-1) - img.at<int>(x+d-1,y);
+}
 #endif//NODE_H

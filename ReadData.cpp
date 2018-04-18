@@ -19,13 +19,16 @@ void readTrainData(string path, vector<Mat>& imgList, vector<int>& labelList){
 		stat((curDir + string("/") + string(entry->d_name)).c_str(),&s);
 		if (((s.st_mode & S_IFMT) != S_IFDIR) && ((s.st_mode & S_IFMT) == S_IFREG)){
 			Mat img = imread((curDir + string(entry->d_name)).c_str(),0);
-			img.convertTo(img, CV_32FC1);
+			//img.convertTo(img, CV_32FC1);
+			integral(img,img);
 			imgList.push_back(img);
 			labelList.push_back(entry->d_name[strlen(entry->d_name)-5]-'0');
 		}
 	}
 	printf("Read training data ends\n");
 }
+
+
 
 /*void readTestData(string path, vector<Mat>& imgList, vector<int>& X, vector<int>& Y){
 	printf("Read training data starts\n");

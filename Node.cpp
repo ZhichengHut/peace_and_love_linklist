@@ -34,7 +34,9 @@ Node::~Node(){
 	vector<int>().swap(imgLabel);
 
 	delete leftchild;
+	leftchild = NULL;
 	delete rightchild;
+	rightchild = NULL;
 }
 
 void Node::setLeaf(){
@@ -57,6 +59,7 @@ void Node::setLeaf(){
 	vector<int>().swap(imgLabel);
 
 	//cout << "This node is setted to be leaf, depth = " << current_depth << endl;
+	//cin.get();
 }
 
 float Node::calculate_entropy(int sample_num, int positive_num){
@@ -93,8 +96,6 @@ void Node::split_Node(){
 		return;
 	}
 
-
-
 	srand (time(NULL));
 
 	int r = imgList[0].rows;
@@ -110,12 +111,14 @@ void Node::split_Node(){
 
 		//randomly choose one positive and one negative sample to calculate the theta
 		int ss_index1 = rand() % imgLabel.size();
-		float theta_tmp = mean(imgList[ss_index1](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index1](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
+		//float theta_tmp = mean(imgList[ss_index1](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index1](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
+		int theta_tmp = get_Sum(imgList[ss_index1], x1_tmp, y1_tmp, d_tmp) - get_Sum(imgList[ss_index1], x2_tmp, y2_tmp, d_tmp);
 		while(true){
 			int ss_index2 = rand() % imgLabel.size();
 			if(imgLabel[ss_index1] + imgLabel[ss_index2] == 1){
-				theta_tmp += (mean(imgList[ss_index2](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index2](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0]);
-				theta_tmp /= 2.0;
+				//theta_tmp += (mean(imgList[ss_index2](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index2](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0]);
+				theta_tmp += (get_Sum(imgList[ss_index2], x1_tmp, y1_tmp, d_tmp) - get_Sum(imgList[ss_index2], x2_tmp, y2_tmp, d_tmp));
+				theta_tmp /= 2;
 				break;
 			}
 		}
@@ -129,12 +132,15 @@ void Node::split_Node(){
 		for(int p=0; p<sample_num; p++){
 			//cout << "img size " << imgList[p].cols <<" " << imgList[p].rows << endl;
 
-			float mean1 = mean(imgList[p](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0];
+			//float mean1 = mean(imgList[p](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0];
+			int sum1 = get_Sum(imgList[p], x1_tmp,y1_tmp,d_tmp);
 			//cout << 11 << endl;
-			float mean2 = mean(imgList[p](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
+			//float mean2 = mean(imgList[p](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
+			int sum2 = get_Sum(imgList[p], x2_tmp,y2_tmp,d_tmp);
 			//cout << 22 << endl;
 
-			if(mean1-mean2>theta_tmp){
+			//if(mean1-mean2>theta_tmp){
+			if(sum1-sum2>theta_tmp){
 				//leftImg_tmp.push_back(imgList[p]);
 				//leftLabel_tmp.push_back(imgLabel[p]);
 				left_num++;
@@ -178,11 +184,15 @@ void Node::split_Node(){
 
 	for(int p=0; p<sample_num; p++){
 		//cout << "location: " << x1 << " " << y1 << " " << x2 << " " << y2 << " " << d << endl;
-		float mean1 = mean(imgList[p](Rect(x1,y1,d,d)))[0];
+		//float mean1 = mean(imgList[p](Rect(x1,y1,d,d)))[0];
 		//cout << 33 << endl;
-		float mean2 = mean(imgList[p](Rect(x2,y2,d,d)))[0];
+		//float mean2 = mean(imgList[p](Rect(x2,y2,d,d)))[0];
 		//cout << 44 << endl;
-		if(mean1-mean2>theta){
+
+		int sum1 = get_Sum(imgList[p], x1,y1,d);
+		int sum2 = get_Sum(imgList[p], x2,y2,d);
+
+		if(sum1-sum2>theta){
 			left_img.push_back(imgList[p]);
 			left_label.push_back(imgLabel[p]);
 		}
@@ -217,9 +227,13 @@ void Node::split_Node(){
 
 int Node::predict(Mat &test_img){
 	while(!LeafFlag){
-		float mean1 = mean(test_img(Rect(x1,y1,d,d)))[0];
-		float mean2 = mean(test_img(Rect(x2,y2,d,d)))[0];
-		if(mean1-mean2>theta)
+		//float mean1 = mean(test_img(Rect(x1,y1,d,d)))[0];
+		//float mean2 = mean(test_img(Rect(x2,y2,d,d)))[0];
+		//if(mean1-mean2>theta)
+		int sum1 = get_Sum(test_img, x1,y1,d);
+		int sum2 = get_Sum(test_img, x2,y2,d);
+
+		if(sum1-sum2>theta)
 			return leftchild->predict(test_img);
 		else
 			return rightchild->predict(test_img);

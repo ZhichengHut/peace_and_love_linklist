@@ -42,6 +42,7 @@ void get_predict_result(RandomForest *RF, string test_fold){
 										if (((sub_s.st_mode & S_IFMT ) != S_IFDIR ) && ((sub_s.st_mode & S_IFMT) == S_IFREG )){
 											if(string(sub_entry->d_name).substr(string(sub_entry->d_name).find_last_of('.') + 1) == "png"){
 												Mat img_tmp = imread(sub_curDIR + string("/") + string(sub_entry->d_name), 1);
+												integral(img_tmp, img_tmp);
 												int x = atoi(string(sub_entry->d_name).substr(0,4).c_str());
 												int y = atoi(string(sub_entry->d_name).substr(5,4).c_str());
 												imgTest.push_back(img_tmp);
@@ -108,10 +109,12 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 							Mat imgTest = imread(cur_img,0);
 
 							vector<float> result;
+							Mat test_tmp;
 
-							for(int x=0; x<=imgTest.cols-2*width; x+=sample_interval){
-								for(int y=0; y<=imgTest.rows-2*width; y+=sample_interval){
-									result.push_back(RF->predict(imgTest(Rect(x,y,2*width,2*width))));
+							for(int x=0; x<imgTest.cols-2*width; x+=sample_interval){
+								for(int y=0; y<imgTest.rows-2*width; y+=sample_interval){
+									integral(imgTest(Rect(x,y,2*width,2*width)), test_tmp);								
+									result.push_back(RF->predict(test_tmp));
 								}
 							}
 
@@ -163,10 +166,10 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 								circle(imgTest,cvPoint(x,y),10,CV_RGB(0,255,255),2,8,0);*/
 								
 								fout << y << "," <<  x << endl;
-								y = y>=1970?1969:y;
+								/*y = y>=1970?1969:y;
 								y = y<=30?30:y;
 								x = x>=1970?1969:x;
-								x = x<=30?30:x;
+								x = x<=30?30:x;*/
 
 								//imshow("extracted",imgTest(Rect(x-width,y-width,2*width,2*width)));
 								//waitKey(0);
@@ -206,7 +209,6 @@ float get_F1_score(string test_fold){
 	char curDir[100];
 
     for(int c=10; c<=12; c++){
-		list<Mat> imgList;
 		sprintf(curDir, "%s%02i", test_fold.c_str(), c);
 
 		DIR* pDIR;
@@ -234,7 +236,7 @@ float get_F1_score(string test_fold){
 							}
 							fin1.close();
 
-							csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_detected.csv";
+							csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
 							ifstream fin2(csv_name);
 							if(fin2){
 								//cout << csv_name << endl;

@@ -266,9 +266,9 @@ void saveTrainData(string img_file, string csv_file, string out_fold, string out
 				//transpose
 				Mat img_t;
 				transpose(img(Rect(x-width,y-width,2*width,2*width)), img_t);
-				/*sprintf(img_name, "%s%04i_1.png", out_fold.c_str(), index);
+				sprintf(img_name, "%s%04i_1.png", out_fold.c_str(), index);
 				imwrite(img_name, img_t);
-				index ++;*/
+				index ++;
 
 				//rotate 90 degree
 				flip(img_t, img_t, 1);
@@ -345,7 +345,6 @@ void getTrainingSet(string train_fold, string out_fold, string out_csv, float th
     char curDir[100];
     
     for(int c=1; c<=9; c++){
-		list<Mat> imgList;
 		//sprintf(curDir, "%s%c%i%c", dataPath.c_str(), delim, c, delim);
 		sprintf(curDir, "%s%02i", train_fold.c_str(), c);
 		//cout << curDir << endl;
