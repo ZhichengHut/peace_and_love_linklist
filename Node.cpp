@@ -113,11 +113,13 @@ void Node::split_Node(){
 		int ss_index1 = rand() % imgLabel.size();
 		//float theta_tmp = mean(imgList[ss_index1](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index1](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
 		int theta_tmp = get_Sum(imgList[ss_index1], x1_tmp, y1_tmp, d_tmp) - get_Sum(imgList[ss_index1], x2_tmp, y2_tmp, d_tmp);
+		//int theta_tmp = get_Sum(imgList[ss_index1], x1_tmp, y1_tmp, d_tmp);
 		while(true){
 			int ss_index2 = rand() % imgLabel.size();
 			if(imgLabel[ss_index1] + imgLabel[ss_index2] == 1){
 				//theta_tmp += (mean(imgList[ss_index2](Rect(x1_tmp,y1_tmp,d_tmp,d_tmp)))[0] - mean(imgList[ss_index2](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0]);
 				theta_tmp += (get_Sum(imgList[ss_index2], x1_tmp, y1_tmp, d_tmp) - get_Sum(imgList[ss_index2], x2_tmp, y2_tmp, d_tmp));
+				//theta_tmp += get_Sum(imgList[ss_index2], x1_tmp, y1_tmp, d_tmp);
 				theta_tmp /= 2;
 				break;
 			}
@@ -137,7 +139,7 @@ void Node::split_Node(){
 			//cout << 11 << endl;
 			//float mean2 = mean(imgList[p](Rect(x2_tmp,y2_tmp,d_tmp,d_tmp)))[0];
 			int sum2 = get_Sum(imgList[p], x2_tmp,y2_tmp,d_tmp);
-			//cout << 22 << endl;
+			//int sum2 = 0;
 
 			//if(mean1-mean2>theta_tmp){
 			if(sum1-sum2>theta_tmp){
@@ -185,12 +187,11 @@ void Node::split_Node(){
 	for(int p=0; p<sample_num; p++){
 		//cout << "location: " << x1 << " " << y1 << " " << x2 << " " << y2 << " " << d << endl;
 		//float mean1 = mean(imgList[p](Rect(x1,y1,d,d)))[0];
-		//cout << 33 << endl;
 		//float mean2 = mean(imgList[p](Rect(x2,y2,d,d)))[0];
-		//cout << 44 << endl;
 
 		int sum1 = get_Sum(imgList[p], x1,y1,d);
 		int sum2 = get_Sum(imgList[p], x2,y2,d);
+		//int sum2 = 0;
 
 		if(sum1-sum2>theta){
 			left_img.push_back(imgList[p]);
@@ -230,8 +231,11 @@ int Node::predict(Mat &test_img){
 		//float mean1 = mean(test_img(Rect(x1,y1,d,d)))[0];
 		//float mean2 = mean(test_img(Rect(x2,y2,d,d)))[0];
 		//if(mean1-mean2>theta)
+		//cout << "x1 = " << x1 << " y1 = " << y1 << " x2 = " << x2 << " y2 = " << y2 << " d = " << d << " col = " << test_img.cols << " row = " << test_img.rows << endl;
+		//cin.get();
 		int sum1 = get_Sum(test_img, x1,y1,d);
 		int sum2 = get_Sum(test_img, x2,y2,d);
+		//int sum2 = 0;
 
 		if(sum1-sum2>theta)
 			return leftchild->predict(test_img);
@@ -248,12 +252,3 @@ int Node::predict(Mat &test_img){
 		return voting;
 	}
 }
-
-/*vector<int> Node::predict(vector<Mat> &test_img){
-	vector<int> result;
-
-	for(int i=0; i<test_img.size(); i++)
-		result.push_back(predict(test_img[i]));
-
-	return result;
-}*/

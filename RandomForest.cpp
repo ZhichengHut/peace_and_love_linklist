@@ -50,10 +50,10 @@ void RandomForest::train(){
 		vector<Mat> img;
 		vector<int> lab;
 
-		for(int i=0; i<imgData.size(); i++){
+		for(int j=0; j<imgData.size(); j++){
 			if((rand()%10001)/10000.0<=sp){
-				img.push_back(imgData[i]);
-				lab.push_back(LabelData[i]);
+				img.push_back(imgData[j]);
+				lab.push_back(LabelData[j]);
 			}
 		}
 

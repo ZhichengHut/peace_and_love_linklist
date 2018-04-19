@@ -59,7 +59,6 @@ public:
 	void split_Node();
 
 	int predict(Mat &test_img);
-	//vector<int> predict(vector<Mat> &test_img);
 };
 
 inline int get_Sum(Mat &img, int x, int y, int d){

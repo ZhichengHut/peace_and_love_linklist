@@ -23,7 +23,7 @@ int main(){
 
 	cout << "*****************Start to extract sub-image*****************" << endl;
 	float train_thresh = 0.40;
-	float test_thresh = 0.35;
+	float test_thresh = 0.30;
 
 	bool get_train = false;
 	bool get_test = false;
@@ -70,7 +70,8 @@ int main(){
 		//get_predict_result(RF, test_fold);
 		int sample_interval = 5;
 		float prob_threshold = 0.4;
-		get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
+		//get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
+		get_predict_result(RF, test_fold);
 		end=clock();
 		double test_t = (end - start) / CLOCKS_PER_SEC ;
 		cout << "*****************Evaluation completed*****************" << endl << endl;

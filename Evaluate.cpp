@@ -41,8 +41,8 @@ void get_predict_result(RandomForest *RF, string test_fold){
 										stat((sub_curDIR + string("/") + string(sub_entry->d_name)).c_str(),&sub_s);
 										if (((sub_s.st_mode & S_IFMT ) != S_IFDIR ) && ((sub_s.st_mode & S_IFMT) == S_IFREG )){
 											if(string(sub_entry->d_name).substr(string(sub_entry->d_name).find_last_of('.') + 1) == "png"){
-												Mat img_tmp = imread(sub_curDIR + string("/") + string(sub_entry->d_name), 1);
-												integral(img_tmp, img_tmp);
+												Mat img_tmp = imread(sub_curDIR + string("/") + string(sub_entry->d_name), 0);
+												integral(img_tmp, img_tmp);	
 												int x = atoi(string(sub_entry->d_name).substr(0,4).c_str());
 												int y = atoi(string(sub_entry->d_name).substr(5,4).c_str());
 												imgTest.push_back(img_tmp);
