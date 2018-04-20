@@ -158,33 +158,8 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 
 							string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
 							ofstream fout(csv_name);
-							for(int i=0; i< cell_num; i++){
-								int x = center[i].x;
-								int y = center[i].y;
-
-								/*circle(heat_map,cvPoint(x,y),10,CV_RGB(255,255,255),2,8,0);
-								circle(imgTest,cvPoint(x,y),10,CV_RGB(0,255,255),2,8,0);*/
-								
-								fout << y << "," <<  x << endl;
-								/*y = y>=1970?1969:y;
-								y = y<=30?30:y;
-								x = x>=1970?1969:x;
-								x = x<=30?30:x;*/
-
-								//imshow("extracted",imgTest(Rect(x-width,y-width,2*width,2*width)));
-								//waitKey(0);
-							}
-
-							/*imshow("heat", heat_map);
-							imshow("test", imgTest);
-							waitKey(0);
-
-							imwrite(curDir + string("/heat.png"),heat_map);
-							imwrite(curDir + string("/test.png"),imgTest);
-							cout << "To see the detected area" << endl;
-							cin.get();
-							remove((curDir + string("/heat.png")).c_str());
-							remove((curDir + string("/test.png")).c_str());*/
+							for(int i=0; i< cell_num; i++)							
+								fout << center[i].y << "," <<  center[i].x << endl;
 
 							center.clear();
 							vector<Point2i>().swap(center);
@@ -198,6 +173,74 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 		}
 	}
 }
+
+void get_predict_result(RandomForest *RF, string test_fold, int width){
+	char curDir[100];
+
+    for(int c=10; c<=12; c++){
+		sprintf(curDir, "%s%02i", test_fold.c_str(), c);
+		cout << curDir << endl;
+
+		DIR* pDIR;
+		struct dirent *entry;
+		struct stat s;
+
+		stat(curDir,&s);
+
+		// if path is a directory
+		if ( (s.st_mode & S_IFMT ) == S_IFDIR ){
+			if(pDIR=opendir(curDir)){
+				//for all entries in directory
+				while(entry = readdir(pDIR)){
+					stat((curDir + string("/") + string(entry->d_name)).c_str(),&s);
+					if (((s.st_mode & S_IFMT ) != S_IFDIR ) && ((s.st_mode & S_IFMT) == S_IFREG )){
+						if(string(entry->d_name).substr(string(entry->d_name).find_last_of('.') + 1) == "tif"){
+							//find the corresponding fold according to the image name
+							string cur_img = string(curDir) + "/" + string(entry->d_name);
+							cout << "current img: " << cur_img << endl;
+							
+							Mat imgTest = imread(cur_img,0);
+
+							string csv_name= string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
+							vector<int> prediction;
+							ifstream fin(csv_name);
+							if(fin){
+								cout << csv_name << endl;
+								prediction = readCSV(csv_name);
+							}
+							fin.close();
+
+							string csv_name_second = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_second.csv";
+							ofstream fout(csv_name_second);
+
+							for(int i=0; i<prediction.size(); i+=2){
+								int y = prediction[i];
+								int x = prediction[i+1];
+
+								if(x < width + 1)
+									x = width + 1;
+								else if(x > imgTest.cols - width)
+									x = imgTest.cols - width;
+								
+								if(y < width + 1)
+									y = width + 1;
+								else if(y > imgTest.rows - width)
+									y = imgTest.rows - width;
+
+								Mat imgTest_integral;
+								integral(imgTest(Rect(x-width,y-width,2*width,2*width)),imgTest_integral);
+
+								if(RF->predict(imgTest_integral)>0.5)
+									fout << y << "," << x << endl;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 
 float get_F1_score(string test_fold){
 	int TP = 0;
@@ -291,6 +334,103 @@ float get_F1_score(string test_fold){
 		}
 
 		fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score;
+		fin.close();
+
+	return F1_score;
+}
+
+float get_F1_score(string test_fold, bool second_filter){
+	int TP = 0;
+	int FP = 0;
+	int FN = 0;
+
+	float F1_score = 0.0;
+
+	char curDir[100];
+
+    for(int c=10; c<=12; c++){
+		sprintf(curDir, "%s%02i", test_fold.c_str(), c);
+
+		DIR* pDIR;
+		struct dirent *entry;
+		struct stat s;
+
+		stat(curDir,&s);
+
+		// if path is a directory
+		if ( (s.st_mode & S_IFMT ) == S_IFDIR ){
+			if(pDIR=opendir(curDir)){
+				//for all entries in directory
+				while(entry = readdir(pDIR)){
+					stat((curDir + string("/") + string(entry->d_name)).c_str(),&s);
+					if (((s.st_mode & S_IFMT ) != S_IFDIR ) && ((s.st_mode & S_IFMT) == S_IFREG )){
+						if(string(entry->d_name).substr(string(entry->d_name).find_last_of('.') + 1) == "tif"){
+							vector<int> ground_truth;
+							vector<int> prediction;
+
+							string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + ".csv";
+							ifstream fin1(csv_name);
+							if(fin1){
+								//cout << csv_name << endl;
+								ground_truth = readCSV(csv_name);
+							}
+							fin1.close();
+
+							csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_second.csv";
+							ifstream fin2(csv_name);
+							if(fin2){
+								//cout << csv_name << endl;
+								prediction = readCSV(csv_name);
+							}
+							fin2.close();
+
+							int num1 = ground_truth.size() / 2;
+							int num2 = prediction.size() / 2;
+							FN += num1;
+							FP += num2;
+
+							for(vector<int>::iterator i=ground_truth.begin(); i!=ground_truth.end();){
+								bool detected_flag = false;
+								for(vector<int>::iterator j=prediction.begin(); j!=prediction.end();){
+									 float distance = sqrt(pow(*i-*j,2.0)+pow(*(i+1)-*(j+1),2.0));
+									 if(distance <= 30){
+										TP++;
+										FP--;
+										FN--;
+										i = ground_truth.erase(i);
+										i = ground_truth.erase(i);
+										j = prediction.erase(j);
+										j = prediction.erase(j);
+										detected_flag = true;
+										break;
+									 }
+									 else
+										 j+=2;
+								}
+								if(!detected_flag)
+									i+=2;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	float Pr = 1.0*TP/(TP+FP);
+	float Re = 1.0*TP/(TP+FN);
+	F1_score = 2*Pr*Re/(Pr+Re);
+	cout << "Pr = " << Pr << ", Re = " << Re << ", F1 score = " << F1_score << endl;
+	cout << "TP = " << TP << ", FP = " << FP << ", FN = " << FN << endl;
+
+	ofstream fin("e:\\45 Thesis\\result\\result.csv",ios::app);
+		if(!fin){
+			cout << "open file error" <<endl; 
+			cin.get();
+			return 0;
+		}
+
+		fin << "second TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score;
 		fin.close();
 
 	return F1_score;
