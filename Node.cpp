@@ -10,6 +10,10 @@ Node::Node(vector<Mat> &sample, vector<int> &label, int curr_depth, int w_w, int
 	minLeafSample = minL;
 	minInfoGain = minInfo;
 
+	x1 = 0;
+	x2 = 0;
+	y1 = 0;
+	y2 = 0;
 	theta = 0;
 	d = w_w;
 	voting = 2;
@@ -73,10 +77,6 @@ float Node::calculate_entropy(int sample_num, int positive_num){
 			entropy = -1.0*pp*log(1.0*pp)/log(2.0) - 1.0*np*log(1.0*np)/log(2.0);
 	}
 	return entropy;
-}
-
-void Node::train(){
-	split_Node();
 }
 
 void Node::split_Node(){
@@ -224,6 +224,28 @@ void Node::split_Node(){
 	//split the child node recursively
 	leftchild->split_Node();
 	rightchild->split_Node();
+}
+
+void Node::save(ofstream &fout){
+	fout << x1 << " " << x2 << " " << y1 << " " << y2 << " " << d << " " << theta << " " << voting << " " << LeafFlag << endl;
+	if(!LeafFlag){
+		leftchild->save(fout);
+		rightchild->save(fout);
+	}
+	return;
+}
+
+void Node::load(ifstream &fin){
+	fin >> x1 >> x2 >> y1 >> y2 >> d >> theta >> voting >> LeafFlag;
+	//cout << "x1:" << x1 << " x2:" << x2 << " y1:" << y1 << " y2:" << y2 << " d:" << d << " theta:" << theta << " voting:" << voting << " LeafFlag:" << LeafFlag << endl;
+	//cin.get();
+	
+	if(!LeafFlag){
+		leftchild = new Node();
+		leftchild->load(fin);
+		rightchild = new Node();
+		rightchild->load(fin);
+	}
 }
 
 int Node::predict(Mat &test_img){

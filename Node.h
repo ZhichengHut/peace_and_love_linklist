@@ -1,7 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-
+#include <fstream>
 #include<stdio.h>
 #include<vector>
 #include<list>
@@ -46,7 +46,7 @@ private:
 	Node *rightchild;
 	
 public:
-	Node(vector<Mat> &sample, vector<int> &label, int curr_depth, int w_w, int maxD, int minL, float minInfo);
+	Node(vector<Mat> &sample = vector<Mat>(), vector<int> &label = vector<int>(), int curr_depth=0, int w_w=0, int maxD=0, int minL=0, float minInfo=0);
 	~Node();
 
 	void setLeaf();
@@ -55,8 +55,10 @@ public:
 	float calculate_entropy(int sample_num, int positive_num);
 	inline float get_infoGain(){return infoGain;};
 
-	void train();
+	inline void train(){split_Node();};
 	void split_Node();
+	void save(ofstream &fout);
+	void load(ifstream &fin);
 
 	int predict(Mat &test_img);
 };

@@ -1,7 +1,6 @@
 #ifndef READDATA_H
 #define READDATA_H
 
-#include <fstream>
 #include <stdio.h>
 #include <vector>
 #include <string>  

@@ -1,8 +1,6 @@
 #ifndef RANDOMFOREST_H
 #define RANDOMFOREST_H
 
-#include <fstream>
-
 #include "Node.h"
 
 class RandomForest{
@@ -20,10 +18,12 @@ private:
 	Node **root_list;
 
 public:
-	RandomForest(vector<Mat> &img, vector<int> &label, int w_w, int t_n, int s_n, int maxD, int minL, float minInfo);
+	RandomForest(vector<Mat> &img = vector<Mat>(), vector<int> &label = vector<int>(), int w_w=0, int t_n=0, int s_n=0, int maxD=0, int minL=0, float minInfo=0);
 	~RandomForest();
 
 	void train();
+	void save(ofstream &fout);
+	void load(ifstream &fin);
 	
 	float predict(Mat test_img);
 	vector<float> predict(vector<Mat> &test_img);
