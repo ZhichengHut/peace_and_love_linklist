@@ -37,10 +37,12 @@ Node::~Node(){
 	vector<Mat>().swap(imgList);
 	vector<int>().swap(imgLabel);
 
-	delete leftchild;
-	leftchild = NULL;
-	delete rightchild;
-	rightchild = NULL;
+	if(!LeafFlag){
+		delete leftchild;
+		leftchild = NULL;
+		delete rightchild;
+		rightchild = NULL;
+	}
 }
 
 void Node::setLeaf(){

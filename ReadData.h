@@ -14,7 +14,7 @@
 using namespace std;
 using namespace cv;
 
-void readTrainData(string path, vector<Mat>& imgList, vector<int>& labelList);
+void readTrainData(string path, vector<Mat>& imgList, vector<int>& labelList, int &pos_num, int &neg_num);
 //void readTestData(string path, vector<Mat>& imgList, vector<int>& X, vector<int>& Y);
 
 

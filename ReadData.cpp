@@ -1,6 +1,6 @@
 #include "ReadData.h"
 
-void readTrainData(string path, vector<Mat>& imgList, vector<int>& labelList){
+void readTrainData(string path, vector<Mat>& imgList, vector<int>& labelList, int &pos_num, int &neg_num){
 	printf("Read training data starts\n");
 	//string path = "D:/Bachelor Thesis/version1.0/dataset/";
 	
@@ -20,9 +20,11 @@ void readTrainData(string path, vector<Mat>& imgList, vector<int>& labelList){
 		if (((s.st_mode & S_IFMT) != S_IFDIR) && ((s.st_mode & S_IFMT) == S_IFREG)){
 			Mat img = imread((curDir + string(entry->d_name)).c_str(),0);
 			//img.convertTo(img, CV_32FC1);
-			integral(img,img);
+			//integral(img,img);
 			imgList.push_back(img);
 			labelList.push_back(entry->d_name[strlen(entry->d_name)-5]-'0');
+			pos_num += (entry->d_name[strlen(entry->d_name)-5]-'0');
+			neg_num += ('1'-entry->d_name[strlen(entry->d_name)-5]);
 		}
 	}
 	printf("Read training data ends\n");

@@ -4,6 +4,7 @@
 #include "Data.h"
 #include "RandomForest.h"
 #include "Evaluate.h"
+#include "TLBO.h"
 
 #include <time.h>
 
@@ -84,11 +85,13 @@ int main(){
 		vector<Mat> imgTrain;
 		vector<Mat> integral_img_list;
 		vector<int> labelTrain;
+		int pos_num = 0;
+		int neg_num = 0;
 
-		readTrainData(out_fold, integral_img_list, labelTrain);
+		readTrainData(out_fold, integral_img_list, labelTrain, pos_num, neg_num);
 
-		cout << "Sample number = " << integral_img_list.size() << endl;
-		cout << "Positive sampe number = " << accumulate(labelTrain.begin(), labelTrain.end(),0) << endl;
+		cout << "Sample number = " << pos_num+neg_num << endl;
+		cout << "Positive sampe number = " << pos_num << endl;
 		cout << "*****************Reading completed*****************" << endl << endl;
 
 		double start,end;
