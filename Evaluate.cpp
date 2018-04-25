@@ -1,7 +1,7 @@
 #include "Evaluate.h"
 
 
-void get_predict_result(RandomForest *RF, string test_fold){
+void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float threshold){
     char curDir[100];
 
     for(int c=10; c<=12; c++){
@@ -42,12 +42,14 @@ void get_predict_result(RandomForest *RF, string test_fold){
 										if (((sub_s.st_mode & S_IFMT ) != S_IFDIR ) && ((sub_s.st_mode & S_IFMT) == S_IFREG )){
 											if(string(sub_entry->d_name).substr(string(sub_entry->d_name).find_last_of('.') + 1) == "png"){
 												Mat img_tmp = imread(sub_curDIR + string("/") + string(sub_entry->d_name), 0);
-												integral(img_tmp, img_tmp);	
-												int x = atoi(string(sub_entry->d_name).substr(0,4).c_str());
-												int y = atoi(string(sub_entry->d_name).substr(5,4).c_str());
-												imgTest.push_back(img_tmp);
-												X.push_back(x);
-												Y.push_back(y);
+												if(TLBO_test(img_tmp, mask, threshold)){
+													integral(img_tmp, img_tmp);	
+													int x = atoi(string(sub_entry->d_name).substr(0,4).c_str());
+													int y = atoi(string(sub_entry->d_name).substr(5,4).c_str());
+													imgTest.push_back(img_tmp);
+													X.push_back(x);
+													Y.push_back(y);
+												}
 											}
 										}
 									}
@@ -434,4 +436,23 @@ float get_F1_score(string test_fold, bool second_filter){
 		fin.close();
 
 	return F1_score;
+}
+
+bool TLBO_test(Mat &img, Mat &mask, float threshold){
+	int histSize = 256;
+	float range[] = {0, 256} ;
+	const float* histRange = {range};
+	
+	bool uniform = true; 
+	bool accumulate = false;
+	
+	Mat hist;
+	calcHist(&img, 1, 0, Mat(), hist, 1, &histSize, &histRange, uniform, accumulate);
+
+	Mat value = mask*hist;
+
+	if(value.at<float>(0,0) > threshold)
+		return false;
+	else
+		return true;
 }

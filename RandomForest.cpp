@@ -1,12 +1,13 @@
 ﻿#include "RandomForest.h"
 
-
 RandomForest::RandomForest(vector<Mat> &img, vector<int> &label, int w_w, int t_n, int s_n, int maxD, int minL, float minInfo){
 	window_width = w_w;
 
 	//imgData.assign(img.begin(), img.end());
 	//LabelData.assign(label.begin(), label.end());
 	imgData = img;
+	for(int i=0; i<imgData.size(); i++)
+		integral(imgData[i],imgData[i]);
 	LabelData = label;
 	//cout << "sum: = " << accumulate(LabelData.begin(),LabelData.end(), 0) << endl;
 

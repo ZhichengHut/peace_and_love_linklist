@@ -7,6 +7,7 @@
 #include "TLBO.h"
 
 #include <time.h>
+#include <iomanip>  
 
 int main(){
 	string train_fold = "C:/45 Thesis/data/train/";
@@ -14,25 +15,45 @@ int main(){
 	string out_fold = "C:/45 Thesis/data/train/extracted/";
 	string out_fold_second = "C:/45 Thesis/data/train/extracted_second/";
 	string model_address = "E:/45 Thesis/result/model.txt";
+	string mask_address = "E:/45 Thesis/result/mask.txt";
 
 	//bool load_flag = true;
 	//bool second_filter = false;
 
-	bool load_flag;
-	cout << "Do you want to load currently existed model? (0/1)" << endl;
-	cin >> load_flag;
+	bool load_mask_flag;
+	Mat mask_result = Mat::zeros(1,256,CV_32FC1);
+	float mask_threshold = 0;
 
-	if(load_flag){
+	bool load_model_flag;
+	cout << "Do you want to load currently existed model? (0/1)" << endl;
+	cin >> load_model_flag;
+
+	if(load_model_flag){
 		ifstream fin_model(model_address);
+		ifstream fin_mask(mask_address);
+
 		if(!fin_model.is_open()){
 			cout << "No model exists" << endl;
-			cout << "A new model will be trained" << endl;
-			load_flag = false;
+			return 1;
+		}
+		else if(!fin_mask.is_open()){
+			cout << "No mask exists" << endl;
+			return 1;
 		}
 
 		RandomForest *RF = new RandomForest();
 		RF->load(fin_model);
 		fin_model.close();
+
+		cout << "*****************Start to load the mask*****************" << endl;
+		fin_mask >> mask_threshold;
+		for(int k=0; k<256; k++)
+			fin_mask >> mask_result.at<float>(0,k);
+
+
+		fin_mask.close();
+		cout << "*****************Loading completed*****************" << endl << endl;
+
 
 		cout << "*****************Start to evaluate the performance*****************" << endl;
 		double start,end;
@@ -41,7 +62,7 @@ int main(){
 		//int sample_interval = 5;
 		//float prob_threshold = 0.4;
 		//get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
-		get_predict_result(RF, test_fold);
+		get_predict_result(RF, test_fold, mask_result, mask_threshold);
 		end=clock();
 		double test_t = (end - start) / CLOCKS_PER_SEC ;
 		cout << "*****************Evaluation completed*****************" << endl << endl;
@@ -50,7 +71,7 @@ int main(){
 		float F1_score = get_F1_score(test_fold);
 		cout << "*****************Calculation completed*****************" << endl << endl;
 		
-		ofstream fin("e:\\45 Thesis\\result\\result.csv",ios::app);
+		ofstream fin("E:/45 Thesis/result/result.csv",ios::app);
 		if(!fin){
 			cout << "open file error" <<endl; 
 			cin.get();
@@ -66,7 +87,7 @@ int main(){
 
 	//cin.get();
 
-	if(!load_flag){
+	if(!load_model_flag){
 		cout << "*****************Start to extract sub-image*****************" << endl;
 		float train_thresh = 0.40;
 		float test_thresh = 0.3;
@@ -83,33 +104,58 @@ int main(){
 
 		cout << "*****************Start to read training data*****************" << endl;
 		vector<Mat> imgTrain;
-		vector<Mat> integral_img_list;
+		//vector<Mat> integral_img_list;
 		vector<int> labelTrain;
 		int pos_num = 0;
 		int neg_num = 0;
 
-		readTrainData(out_fold, integral_img_list, labelTrain, pos_num, neg_num);
+		readTrainData(out_fold, imgTrain, labelTrain, pos_num, neg_num);
 
 		cout << "Sample number = " << pos_num+neg_num << endl;
 		cout << "Positive sampe number = " << pos_num << endl;
 		cout << "*****************Reading completed*****************" << endl << endl;
+
+		cout << "Do you want to generate a mask? (0/1)" << endl;
+		//cin >> load_mask_flag;
+		load_mask_flag = true;
+
+		if(load_mask_flag){
+			cout << "*****************Start to generate mask*****************" << endl;
+			int pop_num = 50;
+			int iteration_num = 200;
+			
+			getMask(imgTrain, labelTrain, pos_num, neg_num, pop_num, iteration_num, mask_result, mask_threshold);
+
+			ofstream fout_mask(mask_address);
+			fout_mask << threshold << endl;
+			for(int k=0; k<256; k++)
+				fout_mask << setprecision(8) << mask_result.at<float>(0,k) << endl;
+			fout_mask.close();
+			cout << "*****************Generation ended*****************" << endl << endl;
+		}
+		else{
+			ifstream fin_mask(mask_address);
+			fin_mask >> mask_threshold;
+			for(int k=0; k<256; k++)
+				fin_mask >> mask_result.at<float>(0,k);
+		}
 
 		double start,end;
 
 		for(float i=1; i<=1; i++){
 			int window_width = i;
 
-			int tree_num = 3;
-			//int tree_num = 30;
+			//int tree_num = 3;
+			int tree_num = 30;
 			int sample_num = 10000;
 			int maxDepth = 50;
-			//int minLeafSample = 60;
-			int minLeafSample = 1;
+			int minLeafSample = 60;
+			//int minLeafSample = 1;
 			float minInfo = 0;
 
 			cout << "*****************Start to train the model*****************" << endl;
 			start=clock();
-			RandomForest *RF = new RandomForest(integral_img_list, labelTrain, window_width, tree_num, sample_num, maxDepth, minLeafSample, minInfo);
+			RandomForest *RF = new RandomForest(imgTrain, labelTrain, window_width, tree_num, sample_num, maxDepth, minLeafSample, minInfo);
 			RF->train();
 			end = clock();
 			double train_t = (end - start) / CLOCKS_PER_SEC ;
@@ -117,7 +163,8 @@ int main(){
 
 			cout << "Do you want to save the model? (0/1)" << endl;
 			bool save_flag;
-			cin >> save_flag;
+			//cin >> save_flag;
+			save_flag = true;
 			if(save_flag){
 				ofstream fout_model(model_address);
 				RF->save(fout_model);
@@ -130,7 +177,7 @@ int main(){
 			//int sample_interval = 5;
 			//float prob_threshold = 0.4;
 			//get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
-			get_predict_result(RF, test_fold);
+			get_predict_result(RF, test_fold, mask_result, mask_threshold);
 			end=clock();
 			double test_t = (end - start) / CLOCKS_PER_SEC ;
 			cout << "*****************Evaluation completed*****************" << endl << endl;
@@ -139,7 +186,7 @@ int main(){
 			float F1_score = get_F1_score(test_fold);
 			cout << "*****************Calculation completed*****************" << endl << endl;
 
-			ofstream fin("e:\\45 Thesis\\result\\result.csv",ios::app);
+			ofstream fin("E:/45 Thesis/result/result.csv",ios::app);
 			if(!fin){
 				cout << "open file error" <<endl; 
 				cin.get();
@@ -153,9 +200,7 @@ int main(){
 			RF = NULL;
 		}
 		imgTrain.clear();
-		vector<Mat>().swap(imgTrain); 
-		integral_img_list.clear();
-		vector<Mat>().swap(integral_img_list);
+		vector<Mat>().swap(imgTrain);
 		labelTrain.clear();
 		vector<int>().swap(labelTrain);
 	}
