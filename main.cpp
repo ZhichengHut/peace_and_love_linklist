@@ -13,7 +13,7 @@ int main(){
 	string train_fold = "C:/45 Thesis/data/train/";
 	string test_fold = "C:/45 Thesis/data/test/";
 	string out_fold = "C:/45 Thesis/data/train/extracted/";
-	string out_fold_second = "C:/45 Thesis/data/train/extracted_second/";
+	//string out_fold_second = "C:/45 Thesis/data/train/extracted_second/";
 	string model_address = "E:/45 Thesis/result/model.txt";
 	string mask_address = "E:/45 Thesis/result/mask.txt";
 
@@ -50,7 +50,6 @@ int main(){
 		for(int k=0; k<256; k++)
 			fin_mask >> mask_result.at<float>(0,k);
 
-
 		fin_mask.close();
 		cout << "*****************Loading completed*****************" << endl << endl;
 
@@ -78,7 +77,7 @@ int main(){
 			return 0;
 		}
 		
-		fin << ",test time," << test_t << endl;;
+		fin << ",test time," << test_t << endl;
 		fin.close();
 		
 		delete RF;
@@ -89,7 +88,7 @@ int main(){
 
 	if(!load_model_flag){
 		cout << "*****************Start to extract sub-image*****************" << endl;
-		float train_thresh = 0.40;
+		float train_thresh = 0.30;
 		float test_thresh = 0.3;
 
 		bool get_train = false;
@@ -97,7 +96,7 @@ int main(){
 
 		int patch_width = 35;
 		int core_R = 4;
-		int ran_point = 40;
+		int ran_point = 0;
 
 		extractData(train_fold, test_fold, out_fold, train_thresh, test_thresh, get_train, get_test, patch_width, core_R, ran_point);
 		cout << "*****************Extraction completed*****************" << endl << endl;
@@ -127,7 +126,7 @@ int main(){
 			getMask(imgTrain, labelTrain, pos_num, neg_num, pop_num, iteration_num, mask_result, mask_threshold);
 
 			ofstream fout_mask(mask_address);
-			fout_mask << threshold << endl;
+			fout_mask << mask_threshold << endl;
 			for(int k=0; k<256; k++)
 				fout_mask << setprecision(8) << mask_result.at<float>(0,k) << endl;
 			fout_mask.close();

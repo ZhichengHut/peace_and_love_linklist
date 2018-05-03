@@ -63,7 +63,7 @@ void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float thr
 							string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
 							ofstream fout(csv_name);
 							for(int i=0; i<result.size(); i++){
-								if(result[i] >= 0.5)
+								if(result[i] >= 0.6)
 									fout << Y[i] << "," << X[i] << endl;
 							}
 
@@ -293,6 +293,18 @@ float get_F1_score(string test_fold){
 							int num2 = prediction.size() / 2;
 							FN += num1;
 							FP += num2;
+
+							/*for(int i=0; i<ground_truth.size(); i+=2){
+								for(int j=0; j<prediction.size(); j+=2){
+									float distance = sqrt(pow(ground_truth[i]-prediction[j],2.0)+pow(ground_truth[i+1]-prediction[j+1],2.0));
+									if(distance <= 30){
+										TP++;
+										FP--;
+										FN--;
+									}
+								}
+							}*/
+
 
 							for(vector<int>::iterator i=ground_truth.begin(); i!=ground_truth.end();){
 								bool detected_flag = false;
