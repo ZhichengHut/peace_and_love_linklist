@@ -64,6 +64,11 @@ void RandomForest::train(){
 		vector<Mat>().swap(img);
 		vector<int>().swap(lab);
 		root_list[i]->train();
+
+		img.clear();
+		vector<Mat>().swap(img);
+		lab.clear();
+		vector<int>().swap(lab);
 	}
 }
 
@@ -89,7 +94,7 @@ void RandomForest::load(ifstream &fin){
 }
 
 float RandomForest::predict(Mat test_img){
-	int vote = 0;
+	float vote = 0.0;
 	for(int j=0; j<tree_num; j++)
 		vote += root_list[j]->predict(test_img);
 	

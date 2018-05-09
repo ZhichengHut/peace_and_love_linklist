@@ -24,7 +24,7 @@ private:
 	int y2;
 	int d;
 	float theta;
-	int voting;
+	float voting;
 
 	//parameter of model
 	int maxDepth;
@@ -60,7 +60,7 @@ public:
 	void save(ofstream &fout);
 	void load(ifstream &fin);
 
-	int predict(Mat &test_img);
+	float predict(Mat &test_img);
 };
 
 inline int get_Sum(Mat &img, int x, int y, int d){

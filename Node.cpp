@@ -16,7 +16,7 @@ Node::Node(vector<Mat> &sample, vector<int> &label, int curr_depth, int w_w, int
 	y2 = 0;
 	theta = 0;
 	d = w_w;
-	voting = 2;
+	voting = 2.0;
 
 	//status of node
 	LeafFlag = false;
@@ -51,12 +51,13 @@ void Node::setLeaf(){
 	
 	//calculate the vote
 	int p_1 = 1.0 * accumulate(imgLabel.begin(), imgLabel.end(),0);
-	int p_2 = imgLabel.size() - p_1;
+	//int p_2 = imgLabel.size() - p_1;
+	voting = 1.0*p_1/imgLabel.size();
 
-	if(p_2 > p_1)
+	/*if(p_2 > p_1)
 		voting = 0;
 	else
-		voting = 1;
+		voting = 1;*/
 
 	//release the space
 	imgList.clear();
@@ -250,7 +251,7 @@ void Node::load(ifstream &fin){
 	}
 }
 
-int Node::predict(Mat &test_img){
+float Node::predict(Mat &test_img){
 	while(!LeafFlag){
 		//float mean1 = mean(test_img(Rect(x1,y1,d,d)))[0];
 		//float mean2 = mean(test_img(Rect(x2,y2,d,d)))[0];
@@ -267,7 +268,8 @@ int Node::predict(Mat &test_img){
 			return rightchild->predict(test_img);
 	}
 
-	if(voting != 0 && voting != 1){
+	//if(voting != 0 && voting != 1){
+	if(voting < 0 || voting > 1){
 		cout << "vote error" << endl;
 		cin.get();
 	}
