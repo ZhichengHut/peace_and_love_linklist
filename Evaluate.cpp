@@ -42,7 +42,8 @@ void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float thr
 										if (((sub_s.st_mode & S_IFMT ) != S_IFDIR ) && ((sub_s.st_mode & S_IFMT) == S_IFREG )){
 											if(string(sub_entry->d_name).substr(string(sub_entry->d_name).find_last_of('.') + 1) == "png"){
 												Mat img_tmp = imread(sub_curDIR + string("/") + string(sub_entry->d_name), 0);
-												if(TLBO_test(img_tmp, mask, threshold)){
+												//if(TLBO_test(img_tmp, mask, threshold)){
+												if(true){
 													integral(img_tmp, img_tmp);	
 													int x = atoi(string(sub_entry->d_name).substr(0,4).c_str());
 													int y = atoi(string(sub_entry->d_name).substr(5,4).c_str());
@@ -60,11 +61,18 @@ void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float thr
 							imgTest.clear();
 							vector<Mat>().swap(imgTest);
 
-							string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
-							ofstream fout(csv_name);
-							for(int i=0; i<result.size(); i++){
-								if(result[i] >= 0.6)
-									fout << Y[i] << "," << X[i] << endl;
+							for(float p_t=0.1; p_t<=1; p_t+=0.05){
+								//string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
+								stringstream stream_pt;
+								stream_pt << p_t;
+								
+								string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + ".csv";
+								ofstream fout(csv_name);
+								for(int i=0; i<result.size(); i++){
+									if(result[i] >= p_t)
+										fout << Y[i] << "," << X[i] << endl;
+								}
+								fout.close();
 							}
 
 							result.clear();
@@ -74,7 +82,7 @@ void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float thr
 							Y.clear();
 							vector<int>().swap(Y);
 
-							fout.close();
+							//fout.close();
 						}
 					}
 				}
@@ -83,7 +91,7 @@ void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float thr
 	}
 }
 
-void get_predict_result(RandomForest *RF, string test_fold, int width, int sample_interval, float prob_threshold){
+void get_predict_result(RandomForest *RF, string test_fold, int width, int sample_interval, float prob_threshold, Mat &mask, float thresh){
     char curDir[100];
 
     for(int c=1; c<=12; c++){
@@ -129,7 +137,7 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 
 							for(int x=0; x<imgTest.cols-2*width; x+=sample_interval){
 								for(int y=0; y<imgTest.rows-2*width; y+=sample_interval){
-									integral(b_r(Rect(x,y,2*width,2*width)), test_tmp);		
+									integral(b_r(Rect(x,y,2*width,2*width)), test_tmp);	
 									result.push_back(RF->predict(test_tmp));
 								}
 							}
@@ -158,7 +166,7 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 							Mat kernel = Mat::ones(3,3,CV_32FC1);
 							int iteration = 1;
 							
-							for(float p_t=0.95; p_t<1; p_t+=0.05){
+							for(float p_t=0.5; p_t<0.51; p_t+=0.05){
 								Mat hh_tmp;
 								threshold(heat_map, hh_tmp, p_t,255 ,THRESH_BINARY);
 
@@ -177,7 +185,7 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 								hh_tmp = imread(curDir + string("/heat.png"),0);
 								remove((curDir + string("/heat.png")).c_str());
 							
-								for(int R = 8; R<9; R++){
+								for(int R = 1; R<2; R++){
 									vector<Point2i> center = getCenter(hh_tmp, R);
 									int cell_num = center.size();
 									cout << "mitosis number: " << cell_num << endl;
@@ -188,8 +196,24 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 
 									string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + "_" + stream_R.str() + ".csv";
 									ofstream fout(csv_name);
-									for(int i=0; i< cell_num; i++)		
-										fout << center[i].y << "," <<  center[i].x << endl;
+									for(int i=0; i< cell_num; i++){
+										int xx = center[i].x;
+										int yy = center[i].y;
+										if( xx< width)
+											xx = width;
+										else if(xx > b_r.cols - width)
+											xx = b_r.cols - width;
+										
+										if( yy< width)
+											yy = width;
+										else if(yy > b_r.rows - width)
+											yy = b_r.rows - width;
+
+										//cout << "xx = " << xx << ", yy = " << yy << endl;
+
+										if(TLBO_test(b_r(Rect(xx-width,yy-width,2*width,2*width)), mask, thresh))
+											fout << center[i].y << "," <<  center[i].x << endl;
+									}
 								
 									center.clear();
 									vector<Point2i>().swap(center);
@@ -277,9 +301,12 @@ void get_predict_result(RandomForest *RF, string test_fold, int width){
 float get_F1_score(string test_fold){
 	int indexx = 0;
 
-	for(float p_t=0.95; p_t<1; p_t+=0.05){
-		for(int R = 8; R<9; R++){
-			cout << "th = " << p_t << ", R = " << R << endl;
+	//for(float p_t=0.5; p_t<0.51; p_t+=0.05){
+		//for(int R = 1; R<2; R++){
+			//cout << "th = " << p_t << ", R = " << R << endl;
+	for(float p_t=0.1; p_t<=1; p_t+=0.05){
+		cout << "th = " << p_t << endl;
+			
 
 			int TP = 0;
 			int FP = 0;
@@ -319,9 +346,10 @@ float get_F1_score(string test_fold){
 
 									stringstream stream_pt, stream_R;  
 									stream_pt << p_t;
-									stream_R << R;
+									//stream_R << R;
 
-									csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + "_" + stream_R.str() + ".csv";
+									//csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + "_" + stream_R.str() + ".csv";
+									csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + ".csv";
 									ifstream fin2(csv_name);
 									if(fin2){
 										//cout << csv_name << endl;
@@ -345,19 +373,19 @@ float get_F1_score(string test_fold){
 										}
 									}*/
 
-									string img_name = string(curDir) + "/" + string(entry->d_name);
+									/*string img_name = string(curDir) + "/" + string(entry->d_name);
 									cout << "img_name = " << img_name << endl;
 									//cin.get();
 									Mat ground_img = imread(img_name, 1);
 									string detect_fold = "E:/detected/";
-									char curDetect[100];
+									char curDetect[100];*/
 							
 									for(vector<int>::iterator i=ground_truth.begin(); i!=ground_truth.end();){
 										bool detected_flag = false;
 										for(vector<int>::iterator j=prediction.begin(); j!=prediction.end();){
 											 float distance = sqrt(pow(*i-*j,2.0)+pow(*(i+1)-*(j+1),2.0));
 											 if(distance <= 30){
-												 int x = *(j+1);
+												/* int x = *(j+1);
 												 int y = *j;
 
 												//whether the position is out of bound
@@ -372,7 +400,7 @@ float get_F1_score(string test_fold){
 													y = ground_img.rows - 35;
 
 												 sprintf(curDetect, "%s%04i_TP.png", detect_fold.c_str(), indexx++);
-												 imwrite(curDetect, ground_img(Rect(x-35,y-35,70,70)));
+												 imwrite(curDetect, ground_img(Rect(x-35,y-35,70,70)));*/
 
 												TP++;
 												FP--;
@@ -390,7 +418,7 @@ float get_F1_score(string test_fold){
 										}
 
 										if(!detected_flag){
-											int x = *(i+1);
+											/*int x = *(i+1);
 											int y = *i;
 											
 											//whether the position is out of bound
@@ -404,12 +432,12 @@ float get_F1_score(string test_fold){
 											else if(y > ground_img.rows - 35)
 												y = ground_img.rows - 35;
 											sprintf(curDetect, "%s%04i_FN.png", detect_fold.c_str(), indexx++);
-											imwrite(curDetect, ground_img(Rect(x-35,y-35,70,70)));
+											imwrite(curDetect, ground_img(Rect(x-35,y-35,70,70)));*/
 
 											i+=2;
 										}
 									}
-									for(vector<int>::iterator j=prediction.begin(); j!=prediction.end();){
+									/*for(vector<int>::iterator j=prediction.begin(); j!=prediction.end();){
 										int x = *(j+1);
 										int y = *j;
 										
@@ -429,7 +457,7 @@ float get_F1_score(string test_fold){
 
 										j = prediction.erase(j);
 										j = prediction.erase(j);
-									}
+									}*/
 								}
 							}
 						}
@@ -444,16 +472,17 @@ float get_F1_score(string test_fold){
 			cout << "TP = " << TP << ", FP = " << FP << ", FN = " << FN << endl;
 
 			ofstream fin("e:\\45 Thesis\\result\\result.csv",ios::app);
-				if(!fin){
-					cout << "open file error" <<endl; 
-					cin.get();
-					return 0;
-				}
+			if(!fin){
+				cout << "open file error" <<endl; 
+				cin.get();
+				return 0;
+			}
 
-				fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << ",R," << R << endl;
+			//fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << ",R," << R << endl;
+			fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << endl;
 			fin.close();
 		}
-	}
+	//}
 
 	return 0.0;
 }

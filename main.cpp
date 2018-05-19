@@ -12,7 +12,7 @@
 int main(){
 	string train_fold = "C:/45 Thesis/data/train/";
 	string test_fold = "C:/45 Thesis/data/test/";
-	string out_fold = "C:/45 Thesis/data/train/extracted/";
+	string out_fold =  "C:/45 Thesis/data/train/extracted/";
 	string model_address = "E:/45 Thesis/result/model.txt";
 	string mask_address = "E:/45 Thesis/result/mask.txt";
 
@@ -124,9 +124,14 @@ int main(){
 		generate_mask_flag = false;
 
 		if(generate_mask_flag){
+			cout << "Generate the mask?" << endl;
+			cin >> generate_mask_flag;
+		}
+
+		if(generate_mask_flag){
 			cout << "*****************Start to generate mask*****************" << endl;
 			int pop_num = 50;
-			int iteration_num = 200;
+			int iteration_num = 100;
 			
 			getMask(imgTrain, labelTrain, pos_num, neg_num, pop_num, iteration_num, mask_result, mask_threshold);
 
@@ -142,7 +147,12 @@ int main(){
 			fin_mask >> mask_threshold;
 			for(int k=0; k<256; k++)
 				fin_mask >> mask_result.at<float>(0,k);
+
+			cout << mask_threshold << endl;
+			cout << mask_result << endl;
 		}
+
+		cin.get();
 
 		double start,end;
 
@@ -178,10 +188,10 @@ int main(){
 			cout << "*****************Start to evaluate the performance*****************" << endl;
 			start=clock();
 			//get_predict_result(RF, test_fold);
-			int sample_interval = 8;
+			/*int sample_interval = 8;
 			float prob_threshold = 0.4;
-			get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
-			//get_predict_result(RF, test_fold, mask_result, mask_threshold);
+			get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold, mask_result, mask_threshold);*/
+			get_predict_result(RF, test_fold, mask_result, mask_threshold);
 			end=clock();
 			double test_t = (end - start) / CLOCKS_PER_SEC ;
 			cout << "*****************Evaluation completed*****************" << endl << endl;

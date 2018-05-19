@@ -64,11 +64,6 @@ void RandomForest::train(){
 		vector<Mat>().swap(img);
 		vector<int>().swap(lab);
 		root_list[i]->train();
-
-		img.clear();
-		vector<Mat>().swap(img);
-		lab.clear();
-		vector<int>().swap(lab);
 	}
 }
 

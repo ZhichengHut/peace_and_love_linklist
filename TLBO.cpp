@@ -5,6 +5,7 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 
 	srand((unsigned)time(NULL));
 
+	//get the histogram of positive and negtive sampe
 	Mat his_pos = Mat::zeros(256, pos_num, CV_32FC1);
 	Mat his_neg = Mat::zeros(256, neg_num, CV_32FC1);
 
@@ -23,6 +24,7 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 	int curr_pos = 0;
 	int curr_neg = 0;
 
+	//generate the grey level means
 	for(int i=0; i<sample_num; i++){
 		calcHist(&imgList[i], 1, 0, Mat(), hist, 1, &histSize, &histRange, uniform, accumulate );
 		hist.convertTo(hist,his_scale.type());
@@ -35,6 +37,7 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 		}
 	}
 
+	//generate a random population
 	RNG rnger(getTickCount());
     int width = 256, height = pop_num;
     Mat mask;
@@ -49,7 +52,7 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 	his_neg.convertTo(his_neg,mask.type());
 
 	//////////////////  initialization  //////////////////
-	Mat reject_num =  Mat::zeros(1,pop_num, CV_32SC1);
+	Mat reject_num =  Mat::zeros(1,pop_num, CV_32SC1);		//record the number of rejected sample for every mask
 	double max, min;
 	Point min_loc, max_loc;
 	
@@ -61,11 +64,12 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 		reject_num.at<int>(0,i) = sum(neg_student.row(i)>max)[0]/255;
 	}
 	minMaxLoc(reject_num, &min, &max, &min_loc, &max_loc);
-	cout << "first max rejection num = " << max << endl;
+	cout << "first maximal rejection num = " << max << endl;
 	cout << "original mask = " << endl;
 	cout << mask.row(max_loc.y) << endl;
 
 	for(int i=0; i<iteration_num; i++){
+		cout << "************** " << i << "th iteration **************" << endl;
 		//////////////////  teaching phase  //////////////////
 		minMaxLoc(reject_num.row(0), &min, &max, &min_loc, &max_loc);
 
@@ -82,8 +86,6 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 			X_new_tmp.copyTo(mask_tmp.row(j));
 		}
 
-		//normalize(mask_tmp, mask_tmp, 1.0, 0.0, CV_MINMAX);
-
 		pos_student = mask_tmp*his_pos;
 		neg_student = mask_tmp*his_neg;
 
@@ -99,9 +101,9 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 			}
 		}
 
-		//cout << "teaching phase, improve num = " << re_num << endl;
-		//minMaxLoc(reject_num, &min, &max, &min_loc, &max_loc);
-		//cout << "max rejection num = " << max << endl;
+		cout << "teaching phase, improve num = " << re_num << endl;
+		minMaxLoc(reject_num, &min, &max, &min_loc, &max_loc);
+		cout << "max rejection num = " << max << endl;
 
 		//////////////////  learning phase  //////////////////
 		for(int j=0; j<pop_num; j++){
@@ -120,8 +122,6 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 				X_new_tmp.copyTo(mask_tmp.row(j));
 			}
 		}
-
-		//normalize(mask_tmp, mask_tmp, 1.0, 0.0, CV_MINMAX);
 		
 		pos_student = mask_tmp*his_pos;
 		neg_student = mask_tmp*his_neg;
@@ -137,9 +137,9 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 				reject_num.at<int>(0,j) = sum(neg_student.row(j)>max)[0]/255;
 			}
 		}
-		//cout << "learning phase, improve num = " << re_num << endl;
-		//minMaxLoc(reject_num, &min, &max, &min_loc, &max_loc);
-		//cout << "max rejection num = " << max << endl;
+		cout << "learning phase, improve num = " << re_num << endl;
+		minMaxLoc(reject_num, &min, &max, &min_loc, &max_loc);
+		cout << "max rejection num = " << max << endl << endl;
 		//cin.get();
 	}
 
@@ -150,6 +150,8 @@ void getMask(vector<Mat> &imgList, vector<int> &labelList, int pos_num, int neg_
 	minMaxLoc(pos_student.row(max_loc.y), &min, &max, &min_loc, &max_loc);
 	cout << "threshold = " << max << endl;
 	threshold = max;
+
+	cin.get();
 
 	return;
 }
