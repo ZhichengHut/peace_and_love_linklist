@@ -57,7 +57,7 @@ int main(){
 		//int sample_interval = 5;
 		//float prob_threshold = 0.4;
 		//get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
-		get_predict_result(RF, test_fold, mask_result, mask_threshold);
+		get_predict_result(RF, test_fold);
 		end=clock();
 		double test_t = (end - start) / CLOCKS_PER_SEC ;
 		cout << "*****************Evaluation completed*****************" << endl << endl;
@@ -188,19 +188,19 @@ int main(){
 			cout << "*****************Start to evaluate the performance*****************" << endl;
 			start=clock();
 			//get_predict_result(RF, test_fold);
-			/*int sample_interval = 8;
+			int sample_interval = 8;
 			float prob_threshold = 0.4;
-			get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold, mask_result, mask_threshold);*/
-			get_predict_result(RF, test_fold, mask_result, mask_threshold);
+			get_predict_result(RF, test_fold, patch_width, sample_interval, prob_threshold);
+			//get_predict_result(RF, test_fold, mask_result, mask_threshold);
 			end=clock();
 			double test_t = (end - start) / CLOCKS_PER_SEC ;
 			cout << "*****************Evaluation completed*****************" << endl << endl;
 
-			/*cout << "*****************Start to calculate F1 score*****************" << endl;
+			cout << "*****************Start to calculate F1 score*****************" << endl;
 			float F1_score = get_F1_score(test_fold);
-			cout << "*****************Calculation completed*****************" << endl << endl;*/
+			cout << "*****************Calculation completed*****************" << endl << endl;
 
-			/*ofstream fin("E:/45 Thesis/result/result.csv",ios::app);
+			ofstream fin("E:/45 Thesis/result/result_BA.csv",ios::app);
 			if(!fin){
 				cout << "open file error" <<endl; 
 				cin.get();
@@ -208,7 +208,7 @@ int main(){
 			}
 
 			fin <<",tree num," <<  tree_num << ",sumple num," << sample_num << ",maxDepth," << maxDepth << ",minLeafSample," << minLeafSample << ",minInfo," << minInfo <<",train time," << train_t << ",test time," << test_t <<",window width," << window_width << endl;;
-			fin.close();*/
+			fin.close();
 
 			delete RF;
 			RF = NULL;
@@ -219,9 +219,9 @@ int main(){
 		vector<int>().swap(labelTrain);
 	}
 
-	float F1_score = get_F1_score(test_fold);
+	/*float F1_score = get_F1_score(test_fold);
 	cout << "F1 ended" << endl;
-	cin.get();
+	cin.get();*/
 
 	cout << "*****************Benchmark completed*****************" << endl;
 	cin.get();

@@ -1,7 +1,7 @@
 #include "Evaluate.h"
 
 
-void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float threshold){
+void get_predict_result(RandomForest *RF, string test_fold){
     char curDir[100];
 
     for(int c=1; c<=12; c++){
@@ -91,7 +91,7 @@ void get_predict_result(RandomForest *RF, string test_fold, Mat &mask, float thr
 	}
 }
 
-void get_predict_result(RandomForest *RF, string test_fold, int width, int sample_interval, float prob_threshold, Mat &mask, float thresh){
+void get_predict_result(RandomForest *RF, string test_fold, int width, int sample_interval, float prob_threshold){
     char curDir[100];
 
     for(int c=1; c<=12; c++){
@@ -152,73 +152,36 @@ void get_predict_result(RandomForest *RF, string test_fold, int width, int sampl
 									heat_map_tmp.at<float>(i,j) = result[j*m+i];
 								}
 							}
-
-							//imshow("heat_map_orginal", heat_map_tmp);
-
-							Mat heat_map_tmp2 = Mat::zeros(imgTest.cols-2*width,imgTest.rows-2*width,CV_32FC1);
-							resize(heat_map_tmp,heat_map_tmp2,Size(imgTest.cols-2*width,imgTest.rows-2*width),0,0,INTER_LINEAR);
-
-							Mat heat_map = Mat::zeros(2000,2000,CV_32FC1);
-							heat_map_tmp2.copyTo(heat_map(Rect(width,width,heat_map_tmp2.cols,heat_map_tmp2.rows)));
-
-							//threshold(heat_map, heat_map, prob_threshold,255 ,THRESH_BINARY);
-
-							Mat kernel = Mat::ones(3,3,CV_32FC1);
-							int iteration = 1;
 							
-							for(float p_t=0.5; p_t<0.51; p_t+=0.05){
-								Mat hh_tmp;
-								threshold(heat_map, hh_tmp, p_t,255 ,THRESH_BINARY);
+							for(int window_width=9; window_width<=9; window_width+=2){
+								Mat s_map = NMS(heat_map_tmp, window_width);
+								//Mat s_map = heat_map_tmp.clone();
+								for(float p_t=0.95; p_t<=0.96; p_t+=0.05){
+								//for(int p_t=0; p_t<=0; p_t++){
+									Mat s_map_tmp = s_map.clone();
+									//threshold(s_map, s_map_tmp, p_t, 255, THRESH_BINARY);
+									s_map_tmp.convertTo(s_map_tmp, CV_8UC1);
+									/*cout << "type = " << s_map_tmp.type() << endl;
+									cin.get();
+									cout << "threshold = " << p_t << endl;
+									cout << s_map_tmp(Rect(50,50,50,50)) << endl;
+									cin.get();*/
+									Mat nonzero_location;
+									findNonZero(s_map_tmp, nonzero_location);
+									nonzero_location = nonzero_location*sample_interval+width;
 
-								/// Apply the open operation
-								morphologyEx(heat_map,heat_map, MORPH_OPEN, kernel, Point(-1,-1), iteration);
-							
-								//Mat kernel = Mat::ones(3,3,CV_32FC1);
-								//int iteration = 3;
-							
-								/// Apply the close operation
-								//morphologyEx(heat_map,heat_map, MORPH_CLOSE, kernel, Point(-1,-1), iteration);
-							
-								imwrite(curDir + string("/heat.png"),hh_tmp);
-								//imshow("heat map", heat_map);
-								//waitKey(0);
-								hh_tmp = imread(curDir + string("/heat.png"),0);
-								remove((curDir + string("/heat.png")).c_str());
-							
-								for(int R = 1; R<2; R++){
-									vector<Point2i> center = getCenter(hh_tmp, R);
-									int cell_num = center.size();
-									cout << "mitosis number: " << cell_num << endl;
+									cout << "mitosis number: " << nonzero_location.rows << endl;
 								
 									stringstream stream_pt, stream_R;  
 									stream_pt << p_t;
-									stream_R << R;
+									stream_R << window_width;
 
 									string csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + "_" + stream_R.str() + ".csv";
 									ofstream fout(csv_name);
-									for(int i=0; i< cell_num; i++){
-										int xx = center[i].x;
-										int yy = center[i].y;
-										if( xx< width)
-											xx = width;
-										else if(xx > b_r.cols - width)
-											xx = b_r.cols - width;
-										
-										if( yy< width)
-											yy = width;
-										else if(yy > b_r.rows - width)
-											yy = b_r.rows - width;
 
-										//cout << "xx = " << xx << ", yy = " << yy << endl;
-
-										if(TLBO_test(b_r(Rect(xx-width,yy-width,2*width,2*width)), mask, thresh))
-											fout << center[i].y << "," <<  center[i].x << endl;
-									}
-								
-									center.clear();
-									vector<Point2i>().swap(center);
-									result.clear();
-									vector<float>().swap(result);
+									for(int i=0; i<nonzero_location.rows; i++)
+										fout << nonzero_location.at<Point>(i,0).y << "," << nonzero_location.at<Point>(i,0).x << endl;
+									
 									fout.close();
 								}
 							}
@@ -301,12 +264,11 @@ void get_predict_result(RandomForest *RF, string test_fold, int width){
 float get_F1_score(string test_fold){
 	int indexx = 0;
 
-	//for(float p_t=0.5; p_t<0.51; p_t+=0.05){
-		//for(int R = 1; R<2; R++){
-			//cout << "th = " << p_t << ", R = " << R << endl;
-	for(float p_t=0.1; p_t<=1; p_t+=0.05){
-		cout << "th = " << p_t << endl;
-			
+	for(float p_t=0.95; p_t<=0.96; p_t+=0.05){
+	//for(int p_t=0; p_t<=0; p_t++){
+		for(int R = 9; R<=9; R+=2){
+			cout << "th = " << p_t << ", R = " << R << endl;
+	//for(float p_t=0.1; p_t<=1; p_t+=0.05){
 
 			int TP = 0;
 			int FP = 0;
@@ -346,10 +308,14 @@ float get_F1_score(string test_fold){
 
 									stringstream stream_pt, stream_R;  
 									stream_pt << p_t;
-									//stream_R << R;
+									stream_R << R;
 
-									//csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + "_" + stream_R.str() + ".csv";
-									csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + ".csv";
+									/*stringstream stream_pt;  
+									stream_pt << p_t;*/
+
+									csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + "_" + stream_R.str() + ".csv";
+									//csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict_" + stream_pt.str() + ".csv";
+									//csv_name = string(curDir) + "/" + string(entry->d_name).substr(0,2) + "_predict.csv";
 									ifstream fin2(csv_name);
 									if(fin2){
 										//cout << csv_name << endl;
@@ -385,7 +351,7 @@ float get_F1_score(string test_fold){
 										for(vector<int>::iterator j=prediction.begin(); j!=prediction.end();){
 											 float distance = sqrt(pow(*i-*j,2.0)+pow(*(i+1)-*(j+1),2.0));
 											 if(distance <= 30){
-												/* int x = *(j+1);
+												 /*int x = *(j+1);
 												 int y = *j;
 
 												//whether the position is out of bound
@@ -471,21 +437,55 @@ float get_F1_score(string test_fold){
 			cout << "Pr = " << Pr << ", Re = " << Re << ", F1 score = " << F1_score << endl;
 			cout << "TP = " << TP << ", FP = " << FP << ", FN = " << FN << endl;
 
-			ofstream fin("e:\\45 Thesis\\result\\result.csv",ios::app);
+			ofstream fin("e:\\45 Thesis\\result\\result_BA.csv",ios::app);
 			if(!fin){
 				cout << "open file error" <<endl; 
 				cin.get();
 				return 0;
 			}
-
+			
+			fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << ",R," << R;
 			//fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << ",R," << R << endl;
-			fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << endl;
+			//fin << "TP," << TP << ",FP," << FP << ",FN," << FN << ",Pr," << Pr << ",Re," << Re << ",F1 score," << F1_score << ",prob," << p_t << endl;
 			fin.close();
-		}
-	//}
+			//}
+	}
+			}
 
 	return 0.0;
 }
+
+Mat NMS(Mat &img_tmp, int window_width){
+	Mat img = img_tmp.clone();
+
+	int row = img.rows;
+	int col = img.cols;
+
+	double max, min;
+	Point min_loc, max_loc;
+
+	Mat blank_box = Mat::zeros(row, col, CV_32FC1);
+	//img.convertTo(img, blank_box.type());
+	Mat s_map = Mat::zeros(row, col, CV_32FC1);
+
+	while(true){
+		minMaxLoc(img, &min, &max, &min_loc, &max_loc);
+		if(max > 0){
+			int x_left = (max_loc.x-window_width < 0) ? max_loc.x : window_width;
+			int x_right = (max_loc.x+window_width > col) ? col-max_loc.x : window_width;
+			int y_up = (max_loc.y-window_width < 0) ? max_loc.y : window_width;
+			int y_down = (max_loc.y+window_width > row) ? row-max_loc.y : window_width;
+
+			s_map.at<float>(max_loc.y, max_loc.x) = max;
+			blank_box(Rect(max_loc.x-x_left, max_loc.y-y_up, x_left+x_right, y_up+y_down)).copyTo(img(Rect(max_loc.x-x_left, max_loc.y-y_up, x_left+x_right, y_up+y_down)));
+		}
+		else
+			break;
+	}
+
+	return s_map;
+}
+
 
 bool TLBO_test(Mat &img, Mat &mask, float threshold){
 	int histSize = 256;
